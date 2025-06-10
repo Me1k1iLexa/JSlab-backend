@@ -26,7 +26,7 @@ export const login = async(req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({where: {email}});
     if (!user) {
-        res.status(401).json({message: "Invalid data"});
+        res.status(404).json({message: "User not found"});
         return;
     }
 
@@ -40,6 +40,26 @@ export const login = async(req: Request, res: Response) => {
     res
         .cookie('token', token, {httpOnly: true, sameSite:'strict'})
         .json({id: user.id, email: user.email})
+}
+export const authMe = async(req: Request, res: Response) => {
+    try{
+        const userId = req.user!.id
+        
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {id: true, email: true},
+        })
+        
+        if (!user) {
+            res.status(401).json({message: "Invalid data"});
+            return;
+        }
+        
+        res.json(user);
+    }catch(error){
+        console.error(error);
+        res.status(500).json({error:"Server error"});
+    }
 }
 
 
